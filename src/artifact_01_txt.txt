@@ -1,0 +1,2 @@
+Continuous Rate Formula:
+Claimable Amount = (Current Timestamp - Last Claim Timestamp) * Tokens Per Second

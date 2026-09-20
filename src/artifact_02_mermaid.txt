@@ -1,0 +1,62 @@
+flowchart TD
+    subgraph ClientLayer ["Client & Payer Layer"]
+        Creator["Creator Authority (Signer)"]
+        Fan["Subscriber / Fan (Signer)"]
+        Collab["Collaborator Wallets (Receivers)"]
+    end
+
+    subgraph SecurityChecks ["Security Guardrails & Validation Matrix"]
+        SG1{"Signer Check: Has Payer Signed?"}
+        SG2{"PDA Seeds Match Expected Canonical Bump?"}
+        SG3{"Account Owner == Program ID?"}
+        SG4{"Clock Verification (sysvar::clock)?"}
+        SG5{"Reentrancy & Balance Invariance Guard"}
+    end
+
+    subgraph ProgramPDAs ["AuraStream Deterministic PDAs"]
+        CreatorProfile["CreatorProfile PDA<br/>seeds = ['creator_profile', creator_pubkey]"]
+        TierAccount["SubscriptionTier PDA<br/>seeds = ['subscription_tier', creator_profile, tier_id]"]
+        UserSubState["UserSubscription PDA<br/>seeds = ['subscription', tier, subscriber_pubkey]"]
+        VaultPDA["Escrow Vault PDA (Authority)<br/>seeds = ['vault_authority', tier]"]
+    end
+
+    subgraph SPLAccounts ["SPL Token Ledger (Token Program)"]
+        FanATA["Fan Associated Token Account (ATA)"]
+        EscrowVaultATA["Program Escrow Vault ATA<br/>(Controlled by VaultPDA)"]
+        CreatorATA["Creator Claim ATA"]
+        CollabATA["Collaborator Claim ATA"]
+    end
+
+    %% Initialization Flow
+    Creator -->|1. initialize_creator| SG1
+    SG1 -->|Pass| CreatorProfile
+
+    %% Tier Configuration Flow
+    Creator -->|2. create_tier (rate, splits, duration)| SG2
+    SG2 -->|Pass| TierAccount
+
+    %% Subscription Flow
+    Fan -->|3. subscribe(duration_seconds)| SG1
+    SG1 --> SG2
+    SG2 --> SG3
+    SG3 --> SG4
+    SG4 -->|Debit Liquidity| FanATA
+    FanATA -->|CPI: Token::transfer| EscrowVaultATA
+    SG4 -->|Write Initial State: start_time, rate, deposited_amount| UserSubState
+
+    %% Continuous Stream Claim Flow
+    Creator -->|4. claim_funds()| SG2
+    SG2 --> SG4
+    SG4 -->|Calculate Accrued Time Δt| UserSubState
+    UserSubState -->|Compute BPS Split Allocation| SecurityChecks
+    SecurityChecks -->|CPI: Token::transfer with VaultPDA seeds| EscrowVaultATA
+    EscrowVaultATA -->|Primary Share| CreatorATA
+    EscrowVaultATA -->|Split Share| CollabATA
+
+    %% Cancellation / Exit Flow
+    Fan -->|5. cancel_and_refund()| SG1
+    SG1 --> SG4
+    SG4 -->|Calculate Unstreamed Remainder| UserSubState
+    UserSubState -->|CPI: Refund Unspent Balance| EscrowVaultATA
+    EscrowVaultATA -->|Refund Balance| FanATA
+    UserSubState -->|Close Account: Rent Refund| Fan
