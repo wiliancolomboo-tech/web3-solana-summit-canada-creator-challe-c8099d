@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  solsync-automation-agent:
+    build: .
+    restart: always
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - SOLANA_WS_URL=wss://api.devnet.solana.com
+      - PROGRAM_ID=So1SyncCreatorCha11engePart2Winner11111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SENDER_EMAIL=receipts@solsync.io
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - SAMPLE_RECIPIENT_EMAIL=${SAMPLE_RECIPIENT_EMAIL}
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

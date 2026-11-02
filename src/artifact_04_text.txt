@@ -1,0 +1,38 @@
+[00:00 - 00:20] HOOK & PROBLEM STATEMENT
+Visual: Split screen: Red side showing Patreon / Web2 fee deductions (30%) + bank holds; 
+        Green side showing Solana CLI terminal running Anchor tests with sub-second finality.
+Spoken (Voiceover):
+"In Web2, creators surrender up to 30% of their patronage to platforms, waiting 30 days for 
+payouts while facing continuous subscriber attrition. On Web3, static royalties are routinely 
+bypassed by off-market wrappers. Welcome to Solana Prism: the zero-slippage, continuous-time 
+streaming protocol built natively for the next generation of Canadian and global creators."
+
+[00:20 - 00:50] CORE ARCHITECTURE & CODE WALKTHROUGH
+Visual: Screen recording zooming into `creator_prism/src/lib.rs`. Highlighting PDA derivation, 
+        saturating math, and the `claim_and_disburse` CPI loop.
+Spoken (Voiceover):
+"Prism is engineered with Anchor and SPL-Token 2022 compatibility. When a fan subscribes, 
+capital is deposited into a deterministic PDA stream escrow. Rather than monthly deductions, 
+funds stream per slot using continuous linear math. Our contract checks the precise slot elapsed, 
+computes claimable lamports down to micro-units, routes protocol fees to governance, and 
+atomically disburses downstream royalty shares to creative collaborators in a single transaction."
+
+[00:50 - 01:25] LIVE DEMO EXECUTION
+Visual: Terminal execution of `anchor test`. The script runs, showing instant initialization, 
+        simulated time advances, atomic fee splits, and immediate cancel/refund execution. 
+        Mermaid architecture diagram overlays to illustrate PDA movements.
+Spoken (Voiceover):
+"Watch our test suite run on a local Solana validator. In test 1, we initialize a 10 USDC-denominated 
+stream. After 3 seconds, a keeper triggers `claim_and_disburse`. Notice the compute units: 
+under 25,000 CU. The creator and collaborators receive their funds instantly, without manual 
+invoicing. When the patron cancels, our reentrancy-guarded state updates first, immediately refunding 
+unvested capital to the fan while locking accrued revenue for the creator."
+
+[01:25 - 02:00] THE WINNING EDGE & CONCLUSION
+Visual: Architecture slide illustrating decentralized keeper integration (Clockwork/Switchboard), 
+        followed by a clean frontend dashboard mockup displaying real-time streaming counters.
+Spoken (Voiceover):
+"Prism wins First Place at the Solana Summit Canada Creator Challenge because it's not a speculative 
+toy—it's battle-tested infrastructure. It eliminates payment friction, guarantees creator 
+sovereignty, utilizes absolute minimum compute units, and unlocks real-time, non-custodial patronage 
+for millions of artists globally. Built for speed, secured by Solana."

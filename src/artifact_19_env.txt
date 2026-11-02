@@ -1,0 +1,16 @@
+# Solana Network Configuration
+SOLANA_RPC_URL=https://api.devnet.solana.com
+PROGRAM_ID=SubScrb111111111111111111111111111111111111
+
+# Keeper Wallet (JSON Array of Uint8Array secret key)
+KEEPER_PRIVATE_KEY=[12,45,233,14,56,...]
+
+# Enterprise Resend API (Transactional Receipts)
+RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuv
+
+# Enterprise Webhooks
+DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+
+# Telemetry Server
+PORT=8080

@@ -1,0 +1,7 @@
+{
+  "status": "healthy",
+  "uptime_seconds": 18420,
+  "last_slot_indexed": 298410291,
+  "rpc_connected": true,
+  "subscribers": ["discord", "resend"]
+}

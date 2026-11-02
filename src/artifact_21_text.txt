@@ -1,0 +1,8 @@
+creator_vault E2E QA Test Suite
+    ✔ 1. Initializes Creator Vault with Deterministic Revenue Splits (234ms)
+    ✔ 2. Subscriber deposits funds and initializes subscription state (189ms)
+    ✔ 3. Fails to crank renewal when time period has not elapsed (Clock guard) (45ms)
+    ✔ 4. Executes crank renewal successfully after epoch duration elapsed (2550ms)
+    ✔ 5. Subscriber cancels subscription and claims unspent deposit back (172ms)
+
+  5 passing (3.2s)

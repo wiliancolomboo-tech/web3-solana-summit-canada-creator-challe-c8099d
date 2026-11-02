@@ -1,0 +1,3 @@
+# Anchor.toml
+[programs.localnet]
+streamcraft = "<INSERT_YOUR_PROGRAM_ID_HERE>"

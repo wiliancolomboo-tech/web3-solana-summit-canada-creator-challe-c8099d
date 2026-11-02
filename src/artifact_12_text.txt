@@ -1,0 +1,8 @@
+2/4 🛠️ How it works under the hood:
+• Rust/Anchor PDA state machine holds funds safely
+• Deliverable proofs sealed on-chain via SHA-256
+• Auto-timeout protects creators against ghosting brands
+• Automated sub-second multi-collaborator splits
+• Live off-chain dispatch via @resend and Slack Webhooks
+
+Zero trust needed.

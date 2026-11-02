@@ -1,317 +1,286 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use anchor_lang::system_program::{transfer, Transfer};
 
-declare_id!("AuraStrEAM1111111111111111111111111111111111");
+declare_id!("So1SyncCreatorCha11engePart2Winner11111111");
 
-pub const MAX_BPS: u16 = 10_000;
-pub const MAX_COLLABORATORS: usize = 3;
-pub const DISCRIMINATOR_LENGTH: usize = 8;
+pub const MAX_RECIPIENTS: usize = 5;
+pub const BASIS_POINTS_DIVISOR: u64 = 10_000;
+pub const MAX_CHANNEL_NAME_LEN: usize = 32;
 
 #[program]
-pub mod aurastream {
+pub mod solsync {
     use super::*;
 
-    /// Initializes a globally unique creator registry profile.
-    pub fn initialize_creator(
-        ctx: Context<InitializeCreator>,
-        metadata_uri: String,
+    /// Initializes a verified creator channel with multi-contributor royalty split rules.
+    pub fn initialize_channel(
+        ctx: Context<InitializeChannel>,
+        name: String,
+        recipients: Vec<Pubkey>,
+        basis_points: Vec<u16>,
     ) -> Result<()> {
-        require!(metadata_uri.len() <= 128, AuraError::StringTooLong);
+        require!(
+            name.as_bytes().len() > 0 && name.as_bytes().len() <= MAX_CHANNEL_NAME_LEN,
+            CreatorError::InvalidNameLength
+        );
+        require!(
+            recipients.len() > 0 && recipients.len() <= MAX_RECIPIENTS,
+            CreatorError::InvalidRecipientsLength
+        );
+        require!(
+            recipients.len() == basis_points.len(),
+            CreatorError::MismatchedSplitsLength
+        );
 
-        let creator = &mut ctx.accounts.creator_profile;
-        creator.authority = ctx.accounts.authority.key();
-        creator.metadata_uri = metadata_uri;
-        creator.tier_count = 0;
-        creator.total_revenue = 0;
-        creator.bump = ctx.bumps.creator_profile;
+        let mut total_bps: u64 = 0;
+        for &bps in basis_points.iter() {
+            require!(bps > 0, CreatorError::ZeroBasisPoints);
+            total_bps = total_bps
+                .checked_add(bps as u64)
+                .ok_or(CreatorError::MathOverflow)?;
+        }
+        require!(
+            total_bps == BASIS_POINTS_DIVISOR,
+            CreatorError::InvalidTotalBasisPoints
+        );
 
-        emit!(CreatorInitializedEvent {
-            authority: creator.authority,
+        let channel = &mut ctx.accounts.channel;
+        channel.creator = ctx.accounts.creator.key();
+        channel.name = name.clone();
+        channel.total_subscribers = 0;
+        channel.total_revenue_lamports = 0;
+        channel.bump = ctx.bumps.channel;
+        channel.vault_bump = ctx.bumps.vault;
+
+        let splitter = &mut ctx.accounts.splitter;
+        splitter.channel = channel.key();
+        splitter.recipient_count = recipients.len() as u8;
+        for i in 0..recipients.len() {
+            splitter.recipients[i] = recipients[i];
+            splitter.basis_points[i] = basis_points[i];
+        }
+        splitter.bump = ctx.bumps.splitter;
+
+        emit!(ChannelCreatedEvent {
+            channel: channel.key(),
+            creator: channel.creator,
+            name,
             timestamp: Clock::get()?.unix_timestamp,
         });
 
         Ok(())
     }
 
-    /// Creates a monetization tier specifying cost per second and collaborator splits.
+    /// Registers a tier (e.g., Monthly Backer Tier) with duration in seconds and price in lamports.
     pub fn create_tier(
         ctx: Context<CreateTier>,
         tier_id: u8,
-        rate_per_second: u64,
-        min_duration_seconds: u64,
-        collaborator_share_bps: u16,
+        name: String,
+        price_lamports: u64,
+        validity_seconds: i64,
     ) -> Result<()> {
-        require!(rate_per_second > 0, AuraError::InvalidPaymentRate);
-        require!(min_duration_seconds >= 60, AuraError::DurationTooShort);
-        require!(collaborator_share_bps <= MAX_BPS, AuraError::InvalidBps);
+        require!(validity_seconds > 0, CreatorError::InvalidTierDuration);
+        require!(price_lamports > 0, CreatorError::InvalidTierPrice);
+        require!(
+            name.as_bytes().len() > 0 && name.as_bytes().len() <= MAX_CHANNEL_NAME_LEN,
+            CreatorError::InvalidNameLength
+        );
 
-        let tier = &mut ctx.accounts.subscription_tier;
-        tier.creator_profile = ctx.accounts.creator_profile.key();
+        let tier = &mut ctx.accounts.tier;
+        tier.channel = ctx.accounts.channel.key();
         tier.tier_id = tier_id;
-        tier.mint = ctx.accounts.mint.key();
-        tier.rate_per_second = rate_per_second;
-        tier.min_duration_seconds = min_duration_seconds;
-        tier.collaborator = ctx.accounts.collaborator.key();
-        tier.collaborator_share_bps = collaborator_share_bps;
-        tier.active_subscribers = 0;
-        tier.bump = ctx.bumps.subscription_tier;
-        tier.vault_bump = ctx.bumps.vault_authority;
-
-        let profile = &mut ctx.accounts.creator_profile;
-        profile.tier_count = profile.tier_count.checked_add(1).ok_or(AuraError::MathOverflow)?;
+        tier.name = name.clone();
+        tier.price_lamports = price_lamports;
+        tier.validity_seconds = validity_seconds;
+        tier.bump = ctx.bumps.tier;
 
         emit!(TierCreatedEvent {
-            creator: profile.key(),
+            channel: ctx.accounts.channel.key(),
             tier_id,
-            rate_per_second,
-            collaborator: tier.collaborator,
-            collaborator_share_bps,
+            name,
+            price_lamports,
+            validity_seconds,
         });
 
         Ok(())
     }
 
-    /// Locks user funds into the tier escrow PDA and activates the real-time stream.
-    pub fn subscribe(ctx: Context<Subscribe>, duration_seconds: u64) -> Result<()> {
-        let tier = &mut ctx.accounts.subscription_tier;
-        require!(duration_seconds >= tier.min_duration_seconds, AuraError::DurationTooShort);
-
-        let deposit_amount = tier
-            .rate_per_second
-            .checked_mul(duration_seconds)
-            .ok_or(AuraError::MathOverflow)?;
-
-        // Execute CPI: Transfer SPL tokens from user to vault
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.subscriber_token_account.to_account_info(),
-            to: ctx.accounts.escrow_vault.to_account_info(),
-            authority: ctx.accounts.subscriber.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, deposit_amount)?;
-
-        // Configure subscription state
+    /// Subscribes a fan to a tier, routes payouts via splitter instantly, and emits audit event.
+    pub fn subscribe(
+        ctx: Context<Subscribe>,
+        external_user_ref: String,
+    ) -> Result<()> {
         let clock = Clock::get()?;
-        let sub = &mut ctx.accounts.subscription;
-        sub.tier = tier.key();
-        sub.subscriber = ctx.accounts.subscriber.key();
-        sub.start_timestamp = clock.unix_timestamp;
-        sub.end_timestamp = clock
-            .unix_timestamp
-            .checked_add(duration_seconds as i64)
-            .ok_or(AuraError::MathOverflow)?;
-        sub.last_claimed_timestamp = clock.unix_timestamp;
-        sub.total_deposited = deposit_amount;
-        sub.claimed_amount = 0;
-        sub.bump = ctx.bumps.subscription;
+        let now = clock.unix_timestamp;
+        let tier = &ctx.accounts.tier;
+        let splitter = &ctx.accounts.splitter;
+        let channel = &mut ctx.accounts.channel;
+        let subscription = &mut ctx.accounts.subscription;
 
-        tier.active_subscribers = tier.active_subscribers.checked_add(1).ok_or(AuraError::MathOverflow)?;
+        let amount_due = tier.price_lamports;
 
-        emit!(SubscriptionStartedEvent {
-            subscriber: sub.subscriber,
-            tier: sub.tier,
-            deposit_amount,
-            end_timestamp: sub.end_timestamp,
-        });
+        // Route payments immediately across configured beneficiaries
+        let recipient_count = splitter.recipient_count as usize;
+        let mut distributed_sum: u64 = 0;
 
-        Ok(())
-    }
-
-    /// Claims linearly accrued tokens from subscriber escrow and splits between creator & collaborator.
-    pub fn claim_stream(ctx: Context<ClaimStream>) -> Result<()> {
-        let clock = Clock::get()?;
-        let current_time = clock.unix_timestamp;
-        let sub = &mut ctx.accounts.subscription;
-        let tier = &ctx.accounts.subscription_tier;
-
-        require!(current_time > sub.last_claimed_timestamp, AuraError::ZeroAccrual);
-
-        // Calculate bounded time window
-        let effective_time = current_time.min(sub.end_timestamp);
-        let elapsed = effective_time
-            .checked_sub(sub.last_claimed_timestamp)
-            .ok_or(AuraError::MathOverflow)? as u64;
-
-        require!(elapsed > 0, AuraError::ZeroAccrual);
-
-        let claimable_amount = elapsed
-            .checked_mul(tier.rate_per_second)
-            .ok_or(AuraError::MathOverflow)?;
-
-        // Calculate BPS allocations
-        let collaborator_share = claimable_amount
-            .checked_mul(tier.collaborator_share_bps as u64)
-            .ok_or(AuraError::MathOverflow)?
-            .checked_div(MAX_BPS as u64)
-            .ok_or(AuraError::MathOverflow)?;
-
-        let creator_share = claimable_amount
-            .checked_sub(collaborator_share)
-            .ok_or(AuraError::MathOverflow)?;
-
-        // Update accounting
-        sub.last_claimed_timestamp = effective_time;
-        sub.claimed_amount = sub
-            .claimed_amount
-            .checked_add(claimable_amount)
-            .ok_or(AuraError::MathOverflow)?;
-
-        let creator_profile = &mut ctx.accounts.creator_profile;
-        creator_profile.total_revenue = creator_profile
-            .total_revenue
-            .checked_add(claimable_amount)
-            .ok_or(AuraError::MathOverflow)?;
-
-        // Transfer funds via Vault PDA Seeds
-        let tier_key = tier.key();
-        let seeds = &[
-            b"vault_authority".as_ref(),
-            tier_key.as_ref(),
-            &[tier.vault_bump],
-        ];
-        let signer_seeds = &[&seeds[..]];
-
-        // 1. Transfer Creator Share
-        if creator_share > 0 {
-            let cpi_accounts = Transfer {
-                from: ctx.accounts.escrow_vault.to_account_info(),
-                to: ctx.accounts.creator_token_account.to_account_info(),
-                authority: ctx.accounts.vault_authority.to_account_info(),
-            };
-            let cpi_ctx = CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                cpi_accounts,
-                signer_seeds,
+        for i in 0..recipient_count {
+            let beneficiary = ctx.remaining_accounts[i].key();
+            require_keys_eq!(
+                beneficiary,
+                splitter.recipients[i],
+                CreatorError::BeneficiaryAccountMismatch
             );
-            token::transfer(cpi_ctx, creator_share)?;
-        }
 
-        // 2. Transfer Collaborator Share
-        if collaborator_share > 0 {
-            let cpi_accounts = Transfer {
-                from: ctx.accounts.escrow_vault.to_account_info(),
-                to: ctx.accounts.collaborator_token_account.to_account_info(),
-                authority: ctx.accounts.vault_authority.to_account_info(),
-            };
-            let cpi_ctx = CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                cpi_accounts,
-                signer_seeds,
-            );
-            token::transfer(cpi_ctx, collaborator_share)?;
-        }
+            let bps = splitter.basis_points[i] as u64;
+            let share = (amount_due as u128)
+                .checked_mul(bps as u128)
+                .ok_or(CreatorError::MathOverflow)?
+                .checked_div(BASIS_POINTS_DIVISOR as u128)
+                .ok_or(CreatorError::MathOverflow)? as u64;
 
-        emit!(StreamClaimedEvent {
-            tier: tier.key(),
-            subscriber: sub.subscriber,
-            creator_payout: creator_share,
-            collaborator_payout: collaborator_share,
-            new_last_claimed: sub.last_claimed_timestamp,
-        });
-
-        Ok(())
-    }
-
-    /// Allows subscriber to unilaterally cancel, refund unstreamed tokens, and reclaim rent.
-    pub fn cancel_subscription(ctx: Context<CancelSubscription>) -> Result<()> {
-        let clock = Clock::get()?;
-        let current_time = clock.unix_timestamp;
-        let sub = &ctx.accounts.subscription;
-        let tier = &mut ctx.accounts.subscription_tier;
-
-        let effective_time = current_time.min(sub.end_timestamp);
-        let elapsed_since_last_claim = effective_time
-            .saturating_sub(sub.last_claimed_timestamp) as u64;
-
-        let unearned_stream_debt = elapsed_since_last_claim
-            .checked_mul(tier.rate_per_second)
-            .ok_or(AuraError::MathOverflow)?;
-
-        let total_consumed = sub
-            .claimed_amount
-            .checked_add(unearned_stream_debt)
-            .ok_or(AuraError::MathOverflow)?;
-
-        let refund_amount = sub
-            .total_deposited
-            .checked_sub(total_consumed)
-            .ok_or(AuraError::InsufficientFundsRemaining)?;
-
-        let tier_key = tier.key();
-        let seeds = &[
-            b"vault_authority".as_ref(),
-            tier_key.as_ref(),
-            &[tier.vault_bump],
-        ];
-        let signer_seeds = &[&seeds[..]];
-
-        // Settle creator unearned debt if any
-        if unearned_stream_debt > 0 {
-            let collaborator_cut = unearned_stream_debt
-                .checked_mul(tier.collaborator_share_bps as u64)
-                .ok_or(AuraError::MathOverflow)?
-                .checked_div(MAX_BPS as u64)
-                .ok_or(AuraError::MathOverflow)?;
-            let creator_cut = unearned_stream_debt
-                .checked_sub(collaborator_cut)
-                .ok_or(AuraError::MathOverflow)?;
-
-            if creator_cut > 0 {
-                token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        Transfer {
-                            from: ctx.accounts.escrow_vault.to_account_info(),
-                            to: ctx.accounts.creator_token_account.to_account_info(),
-                            authority: ctx.accounts.vault_authority.to_account_info(),
-                        },
-                        signer_seeds,
-                    ),
-                    creator_cut,
-                )?;
-            }
-            if collaborator_cut > 0 {
-                token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.to_account_info(),
-                        Transfer {
-                            from: ctx.accounts.escrow_vault.to_account_info(),
-                            to: ctx.accounts.collaborator_token_account.to_account_info(),
-                            authority: ctx.accounts.vault_authority.to_account_info(),
-                        },
-                        signer_seeds,
-                    ),
-                    collaborator_cut,
-                )?;
-            }
-        }
-
-        // Refund remaining unstreamed tokens to subscriber
-        if refund_amount > 0 {
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
+            if share > 0 {
+                let cpi_context = CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
                     Transfer {
-                        from: ctx.accounts.escrow_vault.to_account_info(),
-                        to: ctx.accounts.subscriber_token_account.to_account_info(),
-                        authority: ctx.accounts.vault_authority.to_account_info(),
+                        from: ctx.accounts.subscriber.to_account_info(),
+                        to: ctx.remaining_accounts[i].to_account_info(),
                     },
-                    signer_seeds,
-                ),
-                refund_amount,
-            )?;
+                );
+                transfer(cpi_context, share)?;
+                distributed_sum = distributed_sum
+                    .checked_add(share)
+                    .ok_or(CreatorError::MathOverflow)?;
+            }
         }
 
-        tier.active_subscribers = tier.active_subscribers.saturating_sub(1);
+        // Send residual dust lamports due to rounding to the primary creator
+        let dust = amount_due
+            .checked_sub(distributed_sum)
+            .ok_or(CreatorError::MathOverflow)?;
+        if dust > 0 {
+            let cpi_context = CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.subscriber.to_account_info(),
+                    to: ctx.accounts.creator.to_account_info(),
+                },
+            );
+            transfer(cpi_context, dust)?;
+        }
 
-        emit!(SubscriptionCancelledEvent {
-            subscriber: sub.subscriber,
-            tier: tier.key(),
-            refunded_amount: refund_amount,
+        // Initialize or extend expiration
+        let new_expiry = if subscription.expires_at > now {
+            subscription
+                .expires_at
+                .checked_add(tier.validity_seconds)
+                .ok_or(CreatorError::MathOverflow)?
+        } else {
+            now.checked_add(tier.validity_seconds)
+                .ok_or(CreatorError::MathOverflow)?
+        };
+
+        let is_new_sub = subscription.expires_at == 0;
+        if is_new_sub {
+            channel.total_subscribers = channel
+                .total_subscribers
+                .checked_add(1)
+                .ok_or(CreatorError::MathOverflow)?;
+        }
+
+        channel.total_revenue_lamports = channel
+            .total_revenue_lamports
+            .checked_add(amount_due)
+            .ok_or(CreatorError::MathOverflow)?;
+
+        subscription.channel = channel.key();
+        subscription.subscriber = ctx.accounts.subscriber.key();
+        subscription.tier_id = tier.tier_id;
+        subscription.expires_at = new_expiry;
+        subscription.bump = ctx.bumps.subscription;
+
+        emit!(SubscriptionPurchasedEvent {
+            channel: channel.key(),
+            subscriber: ctx.accounts.subscriber.key(),
+            tier_id: tier.tier_id,
+            paid_lamports: amount_due,
+            new_expires_at: new_expiry,
+            external_user_ref,
+            timestamp: now,
         });
 
-        // Account is automatically closed and rent returned to subscriber via `close = subscriber`
+        Ok(())
+    }
+
+    /// Direct micro-tipping instruction to support creator with arbitrary lamport donation.
+    pub fn send_tip(
+        ctx: Context<SendTip>,
+        amount_lamports: u64,
+        memo: String,
+    ) -> Result<()> {
+        require!(amount_lamports > 0, CreatorError::InvalidTipAmount);
+        require!(memo.as_bytes().len() <= 128, CreatorError::MemoTooLong);
+
+        let channel = &mut ctx.accounts.channel;
+        let splitter = &ctx.accounts.splitter;
+        let recipient_count = splitter.recipient_count as usize;
+
+        let mut distributed_sum: u64 = 0;
+        for i in 0..recipient_count {
+            let beneficiary = ctx.remaining_accounts[i].key();
+            require_keys_eq!(
+                beneficiary,
+                splitter.recipients[i],
+                CreatorError::BeneficiaryAccountMismatch
+            );
+
+            let bps = splitter.basis_points[i] as u64;
+            let share = (amount_lamports as u128)
+                .checked_mul(bps as u128)
+                .ok_or(CreatorError::MathOverflow)?
+                .checked_div(BASIS_POINTS_DIVISOR as u128)
+                .ok_or(CreatorError::MathOverflow)? as u64;
+
+            if share > 0 {
+                let cpi_context = CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    Transfer {
+                        from: ctx.accounts.fan.to_account_info(),
+                        to: ctx.remaining_accounts[i].to_account_info(),
+                    },
+                );
+                transfer(cpi_context, share)?;
+                distributed_sum = distributed_sum
+                    .checked_add(share)
+                    .ok_or(CreatorError::MathOverflow)?;
+            }
+        }
+
+        let dust = amount_lamports
+            .checked_sub(distributed_sum)
+            .ok_or(CreatorError::MathOverflow)?;
+        if dust > 0 {
+            let cpi_context = CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.fan.to_account_info(),
+                    to: ctx.accounts.creator.to_account_info(),
+                },
+            );
+            transfer(cpi_context, dust)?;
+        }
+
+        channel.total_revenue_lamports = channel
+            .total_revenue_lamports
+            .checked_add(amount_lamports)
+            .ok_or(CreatorError::MathOverflow)?;
+
+        emit!(TipReceivedEvent {
+            channel: channel.key(),
+            donor: ctx.accounts.fan.key(),
+            amount_lamports,
+            memo,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+
         Ok(())
     }
 }
@@ -321,18 +290,35 @@ pub mod aurastream {
 // -----------------------------------------------------------------------------
 
 #[derive(Accounts)]
-#[instruction(metadata_uri: String)]
-pub struct InitializeCreator<'info> {
+#[instruction(name: String)]
+pub self struct InitializeChannel<'info> {
     #[account(
         init,
-        payer = authority,
-        space = DISCRIMINATOR_LENGTH + CreatorProfile::INIT_SPACE,
-        seeds = [b"creator_profile", authority.key().as_ref()],
+        payer = creator,
+        space = 8 + ChannelAccount::INIT_SPACE,
+        seeds = [b"channel", creator.key().as_ref()],
         bump
     )]
-    pub creator_profile: Account<'info, CreatorProfile>,
+    pub channel: Account<'info, ChannelAccount>,
+
+    #[account(
+        init,
+        payer = creator,
+        space = 8 + SplitterAccount::INIT_SPACE,
+        seeds = [b"splitter", channel.key().as_ref()],
+        bump
+    )]
+    pub splitter: Account<'info, SplitterAccount>,
+
+    /// CHECK: PDA used as program escrow vault.
+    #[account(
+        seeds = [b"vault", channel.key().as_ref()],
+        bump
+    )]
+    pub vault: UncheckedAccount<'info>,
+
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub creator: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -340,273 +326,213 @@ pub struct InitializeCreator<'info> {
 #[instruction(tier_id: u8)]
 pub struct CreateTier<'info> {
     #[account(
-        mut,
-        has_one = authority @ AuraError::Unauthorized
+        has_one = creator @ CreatorError::Unauthorized
     )]
-    pub creator_profile: Account<'info, CreatorProfile>,
+    pub channel: Account<'info, ChannelAccount>,
+
     #[account(
         init,
-        payer = authority,
-        space = DISCRIMINATOR_LENGTH + SubscriptionTier::INIT_SPACE,
-        seeds = [b"subscription_tier", creator_profile.key().as_ref(), &[tier_id]],
+        payer = creator,
+        space = 8 + TierAccount::INIT_SPACE,
+        seeds = [b"tier", channel.key().as_ref(), &[tier_id]],
         bump
     )]
-    pub subscription_tier: Account<'info, SubscriptionTier>,
-    /// CHECK: Vault authority PDA serving as transfer signer
-    #[account(
-        seeds = [b"vault_authority", subscription_tier.key().as_ref()],
-        bump
-    )]
-    pub vault_authority: UncheckedAccount<'info>,
-    #[account(
-        init,
-        payer = authority,
-        token::mint = mint,
-        token::authority = vault_authority,
-        seeds = [b"escrow_vault", subscription_tier.key().as_ref()],
-        bump
-    )]
-    pub escrow_vault: Account<'info, TokenAccount>,
-    pub mint: Account<'info, Mint>,
-    /// CHECK: Collaborator recipient account
-    pub collaborator: AccountInfo<'info>,
+    pub tier: Account<'info, TierAccount>,
+
     #[account(mut)]
-    pub authority: Signer<'info>,
-    pub token_program: Program<'info, Token>,
+    pub creator: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
 pub struct Subscribe<'info> {
     #[account(mut)]
-    pub subscription_tier: Account<'info, SubscriptionTier>,
+    pub channel: Account<'info, ChannelAccount>,
+
     #[account(
-        init,
+        seeds = [b"tier", channel.key().as_ref(), &[tier.tier_id]],
+        bump = tier.bump,
+        has_one = channel @ CreatorError::TierChannelMismatch
+    )]
+    pub tier: Account<'info, TierAccount>,
+
+    #[account(
+        seeds = [b"splitter", channel.key().as_ref()],
+        bump = splitter.bump,
+        has_one = channel @ CreatorError::SplitterChannelMismatch
+    )]
+    pub splitter: Account<'info, SplitterAccount>,
+
+    #[account(
+        init_if_needed,
         payer = subscriber,
-        space = DISCRIMINATOR_LENGTH + UserSubscription::INIT_SPACE,
-        seeds = [b"subscription", subscription_tier.key().as_ref(), subscriber.key().as_ref()],
+        space = 8 + SubscriptionAccount::INIT_SPACE,
+        seeds = [b"subscription", subscriber.key().as_ref(), channel.key().as_ref()],
         bump
     )]
-    pub subscription: Account<'info, UserSubscription>,
-    #[account(
-        mut,
-        seeds = [b"escrow_vault", subscription_tier.key().as_ref()],
-        bump
-    )]
-    pub escrow_vault: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = subscriber_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint,
-        constraint = subscriber_token_account.owner == subscriber.key() @ AuraError::Unauthorized
-    )]
-    pub subscriber_token_account: Account<'info, TokenAccount>,
+    pub subscription: Account<'info, SubscriptionAccount>,
+
+    /// CHECK: Primary creator key for dust settlements and validation.
+    #[account(mut, address = channel.creator)]
+    pub creator: AccountInfo<'info>,
+
     #[account(mut)]
     pub subscriber: Signer<'info>,
-    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-pub struct ClaimStream<'info> {
+pub struct SendTip<'info> {
     #[account(mut)]
-    pub creator_profile: Account<'info, CreatorProfile>,
-    #[account(
-        mut,
-        has_one = creator_profile @ AuraError::InvalidCreatorProfile,
-        has_one = collaborator @ AuraError::InvalidCollaborator
-    )]
-    pub subscription_tier: Account<'info, SubscriptionTier>,
-    #[account(
-        mut,
-        has_one = tier @ AuraError::InvalidTier
-    )]
-    pub subscription: Account<'info, UserSubscription>,
-    /// CHECK: Validated by PDA derivation seeds
-    #[account(
-        seeds = [b"vault_authority", subscription_tier.key().as_ref()],
-        bump = subscription_tier.vault_bump
-    )]
-    pub vault_authority: UncheckedAccount<'info>,
-    #[account(
-        mut,
-        seeds = [b"escrow_vault", subscription_tier.key().as_ref()],
-        bump
-    )]
-    pub escrow_vault: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = creator_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint
-    )]
-    pub creator_token_account: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = collaborator_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint
-    )]
-    pub collaborator_token_account: Account<'info, TokenAccount>,
-    /// CHECK: Matches tier collaborator pubkey
-    pub collaborator: AccountInfo<'info>,
-    pub token_program: Program<'info, Token>,
-}
+    pub channel: Account<'info, ChannelAccount>,
 
-#[derive(Accounts)]
-pub struct CancelSubscription<'info> {
     #[account(
-        mut,
-        has_one = collaborator @ AuraError::InvalidCollaborator
+        seeds = [b"splitter", channel.key().as_ref()],
+        bump = splitter.bump,
+        has_one = channel @ CreatorError::SplitterChannelMismatch
     )]
-    pub subscription_tier: Account<'info, SubscriptionTier>,
-    #[account(
-        mut,
-        close = subscriber,
-        has_one = subscriber @ AuraError::Unauthorized,
-        has_one = tier @ AuraError::InvalidTier
-    )]
-    pub subscription: Account<'info, UserSubscription>,
-    /// CHECK: Derived PDA
-    #[account(
-        seeds = [b"vault_authority", subscription_tier.key().as_ref()],
-        bump = subscription_tier.vault_bump
-    )]
-    pub vault_authority: UncheckedAccount<'info>,
-    #[account(
-        mut,
-        seeds = [b"escrow_vault", subscription_tier.key().as_ref()],
-        bump
-    )]
-    pub escrow_vault: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = subscriber_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint
-    )]
-    pub subscriber_token_account: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = creator_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint
-    )]
-    pub creator_token_account: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = collaborator_token_account.mint == subscription_tier.mint @ AuraError::InvalidMint
-    )]
-    pub collaborator_token_account: Account<'info, TokenAccount>,
-    /// CHECK: Checked against tier collaborator
-    pub collaborator: AccountInfo<'info>,
+    pub splitter: Account<'info, SplitterAccount>,
+
+    /// CHECK: Channel owner.
+    #[account(mut, address = channel.creator)]
+    pub creator: AccountInfo<'info>,
+
     #[account(mut)]
-    pub subscriber: Signer<'info>,
-    pub token_program: Program<'info, Token>,
+    pub fan: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 // -----------------------------------------------------------------------------
-// STATE STRUCTS
+// STATE SCHEMAS
 // -----------------------------------------------------------------------------
 
 #[account]
-#[derive(InitSpace)]
-pub struct CreatorProfile {
-    pub authority: Pubkey,
-    #[max_len(128)]
-    pub metadata_uri: String,
-    pub tier_count: u8,
-    pub total_revenue: u64,
-    pub bump: u8,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct SubscriptionTier {
-    pub creator_profile: Pubkey,
-    pub mint: Pubkey,
-    pub collaborator: Pubkey,
-    pub rate_per_second: u64,
-    pub min_duration_seconds: u64,
-    pub active_subscribers: u32,
-    pub collaborator_share_bps: u16,
-    pub tier_id: u8,
+pub struct ChannelAccount {
+    pub creator: Pubkey,
+    pub name: String,
+    pub total_subscribers: u64,
+    pub total_revenue_lamports: u64,
     pub bump: u8,
     pub vault_bump: u8,
 }
 
+impl ChannelAccount {
+    pub const INIT_SPACE: usize = 32 + (4 + MAX_CHANNEL_NAME_LEN) + 8 + 8 + 1 + 1;
+}
+
 #[account]
-#[derive(InitSpace)]
-pub struct UserSubscription {
-    pub tier: Pubkey,
-    pub subscriber: Pubkey,
-    pub start_timestamp: i64,
-    pub end_timestamp: i64,
-    pub last_claimed_timestamp: i64,
-    pub total_deposited: u64,
-    pub claimed_amount: u64,
+pub struct SplitterAccount {
+    pub channel: Pubkey,
+    pub recipient_count: u8,
+    pub recipients: [Pubkey; MAX_RECIPIENTS],
+    pub basis_points: [u16; MAX_RECIPIENTS],
     pub bump: u8,
 }
 
+impl SplitterAccount {
+    pub const INIT_SPACE: usize = 32 + 1 + (32 * MAX_RECIPIENTS) + (2 * MAX_RECIPIENTS) + 1;
+}
+
+#[account]
+pub struct TierAccount {
+    pub channel: Pubkey,
+    pub tier_id: u8,
+    pub name: String,
+    pub price_lamports: u64,
+    pub validity_seconds: i64,
+    pub bump: u8,
+}
+
+impl TierAccount {
+    pub const INIT_SPACE: usize = 32 + 1 + (4 + MAX_CHANNEL_NAME_LEN) + 8 + 8 + 1;
+}
+
+#[account]
+pub struct SubscriptionAccount {
+    pub channel: Pubkey,
+    pub subscriber: Pubkey,
+    pub tier_id: u8,
+    pub expires_at: i64,
+    pub bump: u8,
+}
+
+impl SubscriptionAccount {
+    pub const INIT_SPACE: usize = 32 + 32 + 1 + 8 + 1;
+}
+
 // -----------------------------------------------------------------------------
-// EVENTS & ERRORS
+// EVENTS
 // -----------------------------------------------------------------------------
 
 #[event]
-pub struct CreatorInitializedEvent {
-    pub authority: Pubkey,
+pub struct ChannelCreatedEvent {
+    pub channel: Pubkey,
+    pub creator: Pubkey,
+    pub name: String,
     pub timestamp: i64,
 }
 
 #[event]
 pub struct TierCreatedEvent {
-    pub creator: Pubkey,
+    pub channel: Pubkey,
     pub tier_id: u8,
-    pub rate_per_second: u64,
-    pub collaborator: Pubkey,
-    pub collaborator_share_bps: u16,
+    pub name: String,
+    pub price_lamports: u64,
+    pub validity_seconds: i64,
 }
 
 #[event]
-pub struct SubscriptionStartedEvent {
+pub struct SubscriptionPurchasedEvent {
+    pub channel: Pubkey,
     pub subscriber: Pubkey,
-    pub tier: Pubkey,
-    pub deposit_amount: u64,
-    pub end_timestamp: i64,
+    pub tier_id: u8,
+    pub paid_lamports: u64,
+    pub new_expires_at: i64,
+    pub external_user_ref: String,
+    pub timestamp: i64,
 }
 
 #[event]
-pub struct StreamClaimedEvent {
-    pub tier: Pubkey,
-    pub subscriber: Pubkey,
-    pub creator_payout: u64,
-    pub collaborator_payout: u64,
-    pub new_last_claimed: i64,
+pub struct TipReceivedEvent {
+    pub channel: Pubkey,
+    pub donor: Pubkey,
+    pub amount_lamports: u64,
+    pub memo: String,
+    pub timestamp: i64,
 }
 
-#[event]
-pub struct SubscriptionCancelledEvent {
-    pub subscriber: Pubkey,
-    pub tier: Pubkey,
-    pub refunded_amount: u64,
-}
+// -----------------------------------------------------------------------------
+// ERROR CODES
+// -----------------------------------------------------------------------------
 
 #[error_code]
-pub enum AuraError {
-    #[msg("Provided URI string length exceeds maximum allowable allocation (128 bytes)")]
-    StringTooLong,
-    #[msg("Signer is not authorized to execute this state mutation")]
-    Unauthorized,
-    #[msg("Streaming rate per second must be strictly greater than zero")]
-    InvalidPaymentRate,
-    #[msg("Subscription duration is lower than minimum enforced duration (60s)")]
-    DurationTooShort,
-    #[msg("Collaborator split basis points cannot exceed 10000 (100%)")]
-    InvalidBps,
-    #[msg("Arithmetic overflow detected during execution")]
+pub enum CreatorError {
+    #[msg("Channel name exceeds permissible length limit")]
+    InvalidNameLength,
+    #[msg("Recipients list cannot be empty or exceed maximum supported count")]
+    InvalidRecipientsLength,
+    #[msg("Recipients and basis points arrays length mismatch")]
+    MismatchedSplitsLength,
+    #[msg("Basis points must be strictly greater than 0")]
+    ZeroBasisPoints,
+    #[msg("Cumulative basis points must equal exactly 10,000")]
+    InvalidTotalBasisPoints,
+    #[msg("Arithmetic overflow detected in financial calculation")]
     MathOverflow,
-    #[msg("Supplied token mint does not match tier payment mint")]
-    InvalidMint,
-    #[msg("Zero accruable streaming funds available for claim")]
-    ZeroAccrual,
-    #[msg("Supplied creator profile account does not match expected reference")]
-    InvalidCreatorProfile,
-    #[msg("Supplied collaborator account does not match tier configuration")]
-    InvalidCollaborator,
-    #[msg("Supplied subscription tier account reference is invalid")]
-    InvalidTier,
-    #[msg("Insufficient remaining balance in escrow to satisfy refund request")]
-    InsufficientFundsRemaining,
+    #[msg("Tier validity duration must be positive")]
+    InvalidTierDuration,
+    #[msg("Tier price must be strictly greater than zero")]
+    InvalidTierPrice,
+    #[msg("Beneficiary account does not match registered splitter account")]
+    BeneficiaryAccountMismatch,
+    #[msg("Unauthorized access attempt for creator-restricted action")]
+    Unauthorized,
+    #[msg("Provided tier does not belong to the targeted channel")]
+    TierChannelMismatch,
+    #[msg("Provided splitter does not belong to the targeted channel")]
+    SplitterChannelMismatch,
+    #[msg("Tip amount must be strictly greater than 0 lamports")]
+    InvalidTipAmount,
+    #[msg("Memo string exceeds 128 bytes")]
+    MemoTooLong,
 }

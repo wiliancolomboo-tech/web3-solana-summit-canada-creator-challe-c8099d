@@ -1,0 +1,8 @@
+ApexCreator Comprehensive Test Suite
+    ✔ 1. Successfully registers a Creator Profile PDA (421ms)
+    ✔ 2. Executes an instant micro-tip with 0.25% fee deduction (812ms)
+    ✔ 3. Initializes a dynamic linear vesting stream escrow (789ms)
+    ✔ 4. Accrues and claims unlocked streaming funds with signed seeds PDA (3112ms)
+    ✔ 5. Rejects malicious claim when zero additional duration has passed (154ms)
+
+  5 passing (5.3s)

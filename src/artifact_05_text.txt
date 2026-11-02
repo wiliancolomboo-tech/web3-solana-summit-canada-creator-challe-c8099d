@@ -1,0 +1,7 @@
+services/daemon/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── index.ts
+│   ├── config.ts
+│   └── integrations.ts

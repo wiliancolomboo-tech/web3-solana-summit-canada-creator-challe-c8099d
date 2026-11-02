@@ -1,0 +1,8 @@
+SolFlow Protocol QA Suite
+    ✔ 1. Initializes SolFlow Protocol Configuration with 2.5% Fee (423ms)
+    ✔ 2. Initializes Creator Stream and Escrows Assets (612ms)
+    ✔ 3. Withdraws claimable accrued funds after delay (3210ms)
+    ✔ 4. Rejects Unauthorized Cancellation Attempts (189ms)
+    ✔ 5. Cancels stream cleanly: Settles creator and refunds subscriber (542ms)
+
+  5 passing (5.1s)

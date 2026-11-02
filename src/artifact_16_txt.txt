@@ -1,0 +1,19 @@
++------------------------+------------------------------------+-----------------------------------------------------+
+| Threat Vector          | Attack Mechanism                   | AuraStream Protocol Defense                         |
++------------------------+------------------------------------+-----------------------------------------------------+
+| Math Overflow / Underflow | Arithmetic manipulation of rates | Checked math (`checked_mul`, `checked_sub`) throughout;|
+|                        | to drain vaults.                   | reverts with `AuraError::MathOverflow`.             |
++------------------------+------------------------------------+-----------------------------------------------------+
+| Unauthorized Draining  | Forging patron/creator keys in CPI | Strict `has_one = patron`, `has_one = creator`, and |
+|                        | contexts to hijack vault tokens.   | seed derivation checks binding PDA directly to keys.|
++------------------------+------------------------------------+-----------------------------------------------------+
+| Front-Running Closure  | Patron cancels stream right before | Cancel computes accrued vested share precisely up to|
+|                        | creator withdraws elapsed share.   | current `Clock::get()?.unix_timestamp` and pays     |
+|                        |                                    | creator before settling remaining float to patron.  |
++------------------------+------------------------------------+-----------------------------------------------------+
+| Rent-Exemption Drain   | Forcing balance below rent-exempt  | Explicit lamport accounting ensures PDAs remain     |
+|                        | minimum to freeze accounts.        | rent-exempt or are closed cleanly via `close` macro.|
++------------------------+------------------------------------+-----------------------------------------------------+
+| Fake Deliverable Spoof | Creator claiming milestone without | Cryptographic 32-byte hash commitment required;     |
+|                        | patron approval.                   | approval authority restricted to patron signature.  |
++------------------------+------------------------------------+-----------------------------------------------------+

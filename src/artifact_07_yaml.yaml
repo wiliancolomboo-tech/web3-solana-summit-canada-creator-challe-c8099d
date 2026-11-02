@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  veristream-relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veristream-telemetry-relay
+    restart: always
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - SOLANA_WS_URL=wss://api.devnet.solana.com
+      - PROGRAM_ID=VeriStream11111111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - SENDER_EMAIL=licenses@veristream.media
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

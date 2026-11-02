@@ -1,0 +1,9 @@
+{
+  "status": "healthy",
+  "programId": "SoLFLow111111111111111111111111111111111111",
+  "cluster": "devnet",
+  "activeWsSubscription": true,
+  "resendConnected": true,
+  "lastSlotProcessed": 298410294,
+  "uptimeSeconds": 86400
+}

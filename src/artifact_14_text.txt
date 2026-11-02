@@ -1,0 +1,8 @@
+SubStream Engine End-to-End Security & Functional Suite
+    ✔ 1. Initializes creator vault with valid 70/30 BPS split config (421ms)
+    ✔ 2. Fails to initialize creator vault if BPS != 10000 (189ms)
+    ✔ 3. Successfully creates a temporal streaming escrow (312ms)
+    ✔ 4. Accrues and streams funds proportionally across split beneficiaries (3102ms)
+    ✔ 5. Allows subscriber to cancel stream, settling accrued and refunding remainder (285ms)
+
+  5 passing (4.32s)

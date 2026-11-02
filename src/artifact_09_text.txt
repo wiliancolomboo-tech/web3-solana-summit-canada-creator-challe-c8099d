@@ -1,0 +1,6 @@
+Under the hood of ZenithFlow:
+⚡ Anchor BPF Program: BPS-accurate escrow with dust-free remaining balance guarantees
+🛡️ Multi-Sig & Arbiter Freeze safeguards for commissioned deliverables
+📡 Event-driven daemon dispatching instant Discord alerts & @resend receipts
+
+400ms payouts for 10 creators at once.

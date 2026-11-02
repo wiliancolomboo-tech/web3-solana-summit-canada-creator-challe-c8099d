@@ -1,0 +1,7 @@
+---
+
+# 4. Enterprise Integration Client & Automation CLI
+
+This enterprise daemon and CLI orchestrates real-time WebSocket event ingestion from Solana, triggers cryptographically verified patron email receipts via **Resend**, and notifies community teams through **Slack/Discord Webhooks**.
+
+### `package.json`

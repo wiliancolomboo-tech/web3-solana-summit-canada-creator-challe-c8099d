@@ -1,0 +1,8 @@
+sol-sovereign
+    ✔ 1. Initializes Creator Hub with 60/40 Collaborator Split Configuration (423ms)
+    ✔ 2. Fails to initialize Hub with invalid Split sums (!= 10000 bps) (210ms)
+    ✔ 3. Creates a real-time linear subscription stream (389ms)
+    ✔ 4. Allows creator to incrementally withdraw accrued streaming funds (3202ms)
+    ✔ 5. Rejects unauthorized withdrawal calls from arbitrary non-hub accounts (182ms)
+
+  5 passing (4.41s)

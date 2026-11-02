@@ -1,0 +1,12 @@
+{
+  "status": "healthy",
+  "uptime_seconds": 1420.52,
+  "processed_events": 48,
+  "last_heartbeat_timestamp": 1735689600000,
+  "memory_usage": {
+    "rss": 48234496,
+    "heapTotal": 24510464,
+    "heapUsed": 18432128,
+    "external": 1823901
+  }
+}

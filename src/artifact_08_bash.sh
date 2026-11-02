@@ -1,22 +1,18 @@
-# 1. Clone the project and navigate to directory
-git clone https://github.com/aurastream/aurastream-protocol.git
-cd aurastream-protocol
+# 1. Clone repository & configure environment
+git clone https://github.com/summit-canada-bounty/creator-ops-protocol.git
+cd creator-ops-protocol
 
-# 2. Install Node dependencies
-yarn install
-
-# 3. Configure Solana localnet environment
-solana config set --url localhost
-
-# 4. Generate local keypair if not present
-solana-keygen new --no-bip39-passphrase -s -o ~/.config/solana/id.json
-
-# 5. Build the Anchor program to generate binary & IDL
+# 2. Build on-chain Anchor program
 anchor build
 
-# 6. Synchronize program address in lib.rs and Anchor.toml
-# Note: Extracts the compiled program address and aligns declarations
-anchor keys sync
+# 3. Synchronize program keys
+solana address -k target/deploy/creator_ops-keypair.json
+# (Paste output into declare_id!("...") inside programs/creator_ops/src/lib.rs)
 
-# 7. Run full integration test suite on isolated localnet
+# 4. Deploy to Solana Devnet
+solana config set --url https://api.devnet.solana.com
+solana airdrop 2
+anchor deploy --provider.cluster devnet
+
+# 5. Run test suite against real local-validator / devnet
 anchor test

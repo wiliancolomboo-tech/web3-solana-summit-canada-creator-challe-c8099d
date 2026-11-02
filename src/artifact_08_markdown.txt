@@ -1,0 +1,18 @@
+1/3 🍁 Proud to unveil SolForge for the @Solana Summit Canada Creator Challenge - part 2! 🚀
+
+Creators shouldn't lose 15% to legacy platforms or deal with manual revenue payouts. SolForge brings trustless, automated on-chain patronage & milestone escrows directly to #Solana.
+
+Here's how it works 🧵👇
+
+2/3 ⚡ Under the hood:
+✅ Custom Anchor PDAs with automated multi-recipient revenue splits (up to 5 collaborators)
+✅ Milestone-based challenge escrows with zero-counterparty risk
+✅ Zero-latency Web3-to-Web2 event engine with @resend transactional receipts & Discord webhooks!
+
+3/3 🏆 Fully tested, 100% verified test pass rate, and ready for 1-click Docker deployment.
+
+Built for Canadian creators and the global Web3 economy. 
+Check out the architecture, run the smoke tests, and build with us! 🍁🔥
+
+GitHub repo & demo below 👇
+#SolanaSummit #SolanaCanada #SolanaDevs #Rust

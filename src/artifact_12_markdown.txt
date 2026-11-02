@@ -1,0 +1,18 @@
+🧵 1/3
+Thrilled to unveil SolPulse Creator Engine for the @Solana Summit Canada Creator Challenge! 🇨🇦⚡
+
+Creators shouldn't wait 60 days for platform payouts or lose 30% to legacy middlemen. We built an autonomous, on-chain multi-party split engine with real-time enterprise webhook bridges. 👇
+
+🧵 2/3
+Under the hood:
+🔹 Non-custodial Anchor program with 10,000 BPS dynamic split routing
+🔹 Micro-patronage threshold PDA escrows
+🔹 Real-time automated transaction receipts via @resend & Discord Webhooks
+🔹 Tested for reentrancy, rent-exemption, & overflow immunity
+
+🧵 3/3
+With sub-400ms finality and negligible gas costs on @solana, SolPulse powers the future of collaborative media production, music royalties, and fan patronage.
+
+100% open-source, Docker-ready, and live on Devnet! 🚀
+
+#Solana #SolanaSummit #Web3Creators #Rust #Anchor

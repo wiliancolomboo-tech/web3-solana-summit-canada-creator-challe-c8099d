@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph Patron Experience
+        A[Patron / Fan] -->|1. Subscribe / Fund Tier| B[Solana Anchor Program: Patron Engine]
+        A -->|2. Receive Gated Email Perk| C[Resend Enterprise Mail API]
+        A -->|3. Access VIP Channel| D[Discord / Slack Community]
+    end
+
+    subgraph Solana Runtime Layer
+        B -->|Initialize Subscription PDA| E[(Patron State Account)]
+        B -->|Deposit Funds| F[(Creator Escrow Vault PDA)]
+        B -->|Emit SubscriptionActivated Event| G[Solana Transaction Log]
+        E -->|Epoch Expiration Check| B
+    end
+
+    subgraph Off-Chain Enterprise Worker
+        H[Patron Event Indexer Daemon] -->|WebSocket Listen: logsSubscribe| G
+        H -->|Verify Ed25519 & Parse Log| I[Payload Validation Engine]
+        I -->|Idempotency Check Passed| J[Enterprise Dispatcher Service]
+        J -->|Trigger Personalized VIP Token| C
+        J -->|Push Webhook Alert| D
+        J -->|Update Analytics| K[(Redis / SQLite State Cache)]
+    end
+
+    subgraph Settlement & Royalties
+        B -->|Withdraw / Stream Disbursement| L[Creator Wallet]
+        B -->|Split BPS Disbursement| M[Collaborator / Treasury Wallet]
+    end

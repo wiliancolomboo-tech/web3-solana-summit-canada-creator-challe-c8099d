@@ -1,9 +1,2 @@
-aurastream - Creator Challenge QA Test Matrix
-    ✔ 1. Initialize Creator Profile Successfully (428ms)
-    ✔ 2. Create Subscription Tier with 20% Collaborator Split (482ms)
-    ✔ 3. Fan Subscribes: Locks 300 Tokens into Vault Escrow (501ms)
-    ✔ 4. Time Elapses & Creator Claims Accrued Stream (80/20 Payout Split) (3152ms)
-    ✔ 5. Subscriber Cancels Early: Reclaims Unspent Balance & Closes Account (498ms)
-    ✔ 6. Security Defense: Reject Unauthorized Cancellation Attempt (320ms)
-
-  6 passing (5.4s)
+tests/
+└── creator_challenge.ts

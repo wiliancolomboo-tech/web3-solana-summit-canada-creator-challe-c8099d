@@ -1,0 +1,24 @@
+[0:00 - 0:15] INTRODUCTION & THE PROBLEM
+Visual: Split screen. Left shows a standard Web2 creator dashboard taking a 45% rake with "Payout in 45 days". Right shows broken, unscalable batch-settlement Web3 subscription attempts.
+Spoken (Voiceover):
+"In Web2, centralized platforms take up to 50% of creator revenue and withhold payouts for weeks. In Web3, existing NFT passes are static, friction-heavy, and lack native linear monetization. Today, we change that."
+
+[0:15 - 0:45] SYSTEM ARCHITECTURE & ON-CHAIN CREATION
+Visual: Terminal transitions into an ultra-clean UI. Creator logs in with Phantom/Backpack, sets a 70/30 automated split between visual artist and sound designer, and publishes a dynamic streamable course.
+Spoken:
+"Meet ApexCreatorStream. Built natively on Solana, it unlocks per-second subscription streaming with automated multi-party revenue routing. Creators deploy immutable split profiles on-chain in one block, enforcing hard mathematical caps up to 10,000 basis points with zero custodial risk."
+
+[0:45 - 1:15] LIVE STREAMING & ZERO-TRUST GATEWAY
+Visual: Viewer connects wallet, approves a 10 USDC monthly deposit. The video immediately unlocks. We switch to Solana Inspector showing continuous micro-yield vesting at 32,000 Compute Units.
+Spoken:
+"When a fan subscribes, capital locks into an isolated PDA Escrow Vault. Subscriptions stream linearly by the second. Arweave and IPFS storage gateways verify active access instantly via our view hook in under 2,500 Compute Units—no centralized API or oracle required."
+
+[1:15 - 1:45] INSTANT SPLIT CRANK & CANCEL/REFUND
+Visual: Creator triggers a claim. Both collaborator wallets increment simultaneously. Fan hits 'Cancel' halfway through; remaining unaccrued capital instantly bounces back to the fan's wallet.
+Spoken:
+"Anyone can crank the settlement. The protocol computes elapsed timestamps, applies basis-point distribution across up to 5 collaborators, and executes atomic CPI transfers. If a fan cancels, unaccrued funds return immediately to the subscriber. Zero locked capital, zero manual accounting."
+
+[1:45 - 2:00] WHY WE WIN FIRST PLACE
+Visual: Fast-cut sequence of clean Anchor test passes (7/7 green), benchmark stats (<35k CUs), and GitHub repository badge.
+Spoken:
+"ApexCreatorStream delivers sub-second settlement, mathematically secure checked math, strict PDA security, and sub-35,000 CU execution. This is the production-ready infrastructure the Solana creator economy has been waiting for. Thank you."

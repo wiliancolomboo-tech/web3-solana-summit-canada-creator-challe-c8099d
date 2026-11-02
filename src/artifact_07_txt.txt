@@ -1,60 +1,7 @@
-================================================================================
-VIDEO TIMECODE & DEMO SCRIPT
-================================================================================
+---
 
-[00:00 - 00:20] HOOK & PROBLEM STATEMENT
-[Visual]: Split screen: Twitch/Patreon taking 30-50% cuts + "Payment pending for 30 days" 
-          versus AuraStream terminal interface running on Solana localnet.
-[Spoken Track]:
-"Web2 creator platforms extract over 30% in rent and hold creator funds hostage 
-for up to 30 days. Meanwhile, current Web3 memberships are clunky: static, 
-gas-heavy, and impossible to split equitably in real time. 
-Welcome to AuraStream: a continuous, second-by-second subscription and 
-programmable royalty engine running natively on Solana with sub-cent settlement."
+# 5. Comprehensive Test Suite & QA Matrix
 
-[00:20 - 00:50] CORE ARCHITECTURE & TOKEN-2022 PDA ENGINE
-[Visual]: High-resolution diagram of the Architecture Flowchart zooming into the 
-          Escrow Vault PDA and microsecond rate math. Terminal executes anchor test.
-[Spoken Track]:
-"AuraStream solves this with zero-crank linear streaming. 
-Creators instantiate modular tiers. When a fan subscribes, tokens enter a 
-tamper-proof Program Derived Escrow Vault. 
-Instead of running expensive off-chain keepers or cron jobs, accrual is calculated 
-in $O(1)$ constant time using Solana's clock sysvar. 
-Collaborators and co-producers receive automated basis-point splits the exact 
-second revenue is unlocked."
+Complete Anchor TypeScript test suite testing all protocol logic: creator initialization, atomic collaborator splits, subscription math, and permission rejections.
 
-[00:50 - 01:25] LIVE DEMO EXECUTION
-[Visual]: Terminal executing the Mocha test suite. Green checkmarks illuminate:
-          1. Tier initialized.
-          2. Subscriber locks 300 USDC tokens.
-          3. Fast-forward clock: Creator claims accrued balance.
-          4. Inspect balances showing creator and collaborator split (80/20).
-          5. Subscriber cancels: Remaining unstreamed funds immediately refunded, 
-             rent lamports reclaimed.
-[Spoken Track]:
-"Watch this live execution. 
-The subscriber deposits 300 tokens into the tier escrow. 
-Three seconds later, the creator calls claim_stream. 
-Without any off-chain intermediary, 80% is routed to the primary artist 
-and 20% to the collaborator instantly. 
-Even better: if a fan cancels early, they are never penalised. 
-The contract calculates the exact unearned debt, routes the earned pennies 
-to the creator, refunds the unspent tokens to the fan, and closes the PDA—returning 
-100% of the rent lamports. That's complete capital efficiency."
-
-[01:25 - 01:45] CU BENCHMARK & PRODUCTION READINESS
-[Visual]: Slide showing CU benchmarks (<23k Compute Units across all instructions) 
-          and the Security Matrix.
-[Spoken Track]:
-"Engineered for high scale: every instruction runs below 25,000 Compute Units. 
-Equipped with strict Anchor account constraints, checked math, and PDA seed guards, 
-AuraStream is resilient against reentrancy, arithmetic overflow, and spoofed mint attacks."
-
-[01:45 - 02:00] THE WINNING SUMMARY
-[Visual]: AuraStream logo, live GitHub repository URL, and Solana Summit Canada Creator Challenge badge.
-[Spoken Track]:
-"AuraStream restores sovereignty to the creator economy: continuous micropayments, 
-instant collaborator equity, and absolute security on the world's most performant blockchain. 
-Thank you!"
-================================================================================
+### `tests/aurastream.ts`

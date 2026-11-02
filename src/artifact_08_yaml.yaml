@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  substream-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: substream-enterprise-daemon
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - SUBSTREAM_PROGRAM_ID=SubSt7K8qVbLmv4eG6xMvZ9rWpY1A5d3F7cNoPQrstU
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=receipts@yourcreatorbrand.com
+      - CREATOR_WEBHOOK_URL=${CREATOR_WEBHOOK_URL}
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,2 +1,8 @@
-Continuous Rate Formula:
-Claimable Amount = (Current Timestamp - Last Claim Timestamp) * Tokens Per Second
++---------------------------------------------------------------------------------------+
+|                                    SOLANA SUBSTREAM                                   |
++---------------------------------------------------------------------------------------+
+|  Creator Platform Margin:  0% Platform Cut (Direct Peer-to-Peer Settlement)           |
+|  Settlement Speed:         < 400ms Sub-Second Finality via Solana High-Throughput     |
+|  Notification Latency:     < 1.2s Real-time Event-Driven Webhooks & Resend Delivery   |
+|  Security Posture:         PDA-Controlled Vaults, Zero Unchecked Math, Reentrancy-Free|
++---------------------------------------------------------------------------------------+

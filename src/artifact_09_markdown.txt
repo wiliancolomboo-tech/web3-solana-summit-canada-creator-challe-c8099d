@@ -1,0 +1,20 @@
+🧵 1/3
+Thrilled to unveil NorthStar (KreatorPay) for the @Solana Summit Canada Creator Challenge! 🇨🇦⚡️
+
+Traditional creator rails take 30% cuts & 30-day payout delays.
+NorthStar replaces this with sub-second, multi-party atomic splits & linear vesting streams on Solana. 
+
+🧵 2/3
+Under the hood:
+✅ Zero-slippage BPS revenue allocation PDAs
+✅ Linear epoch-decay patronage streaming
+✅ Enterprise Webhooks via @resend & Discord for real-time receipts
+✅ Anchor 0.30 engine executing sub-85k Compute Units per payout
+
+Decentralized monetization meets Web2 UX.
+
+🧵 3/3
+Complete open-source submission package with 100% test coverage, turnkey Docker deployment, and production Anchor contracts is live on GitHub!
+
+Huge thanks to @Solana @SolanaFndn for hosting the Summit Canada Creator Challenge! 🚀
+#Solana #SolanaSummit #Web3Creators #Rust #Anchor

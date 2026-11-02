@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  aurora-sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aurorasplit-sentinel
+    restart: always
+    environment:
+      - PORT=3000
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=AuRoRA1111111111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - CREATOR_NOTIFY_EMAIL=${CREATOR_NOTIFY_EMAIL}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

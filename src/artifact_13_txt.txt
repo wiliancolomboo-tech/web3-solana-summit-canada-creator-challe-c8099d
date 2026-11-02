@@ -1,0 +1,6 @@
+How ApexCreator works under the hood:
+1️⃣ Anchor Smart Contract executes atomic BPS splits to creators & collaborators in a single tx.
+2️⃣ PDA-derived AccessReceipt validates membership tenure on-chain.
+3️⃣ Real-time Relayer converts Solana logs to @resend, Discord & Slack webhooks instantly.
+
+Zero stubs. Pure execution. 🦀🔥

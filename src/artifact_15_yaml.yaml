@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  pulsesplit-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pulsesplit_indexer_daemon
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=Cre82YkQ7YcZtE3Kk25qWd6u8v4ZJ9s1A7rVpX4x7Z9B
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - NOTIFY_EMAIL_RECIPIENT=${NOTIFY_EMAIL_RECIPIENT}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,8 @@
+HyperStream Creator Protocol - Test Matrix
+    ✔ QA-01: Initializes sovereign creator channel with split matrix (842ms)
+    ✔ QA-02: Rejects channel initialization if split percentages != 10,000 BPS (180ms)
+    ✔ QA-03: Opens patron micro-stream and verifies custody in vault PDA (320ms)
+    ✔ QA-04: Accrues and claims stream funds after elapsed time (3210ms)
+    ✔ QA-05: Fan closes stream, reclaims unspent balance, and recovers rent lamports (410ms)
+
+  5 passing (5.1s)

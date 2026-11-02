@@ -1,0 +1,23 @@
+{
+  "name": "solsync-automation-agent",
+  "version": "1.0.0",
+  "description": "Enterprise Webhook & Resend Dispatcher for Solana Creator Challenge",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js",
+    "cli": "ts-node src/cli.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/web3.js": "^1.95.3",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/node-fetch": "^2.6.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

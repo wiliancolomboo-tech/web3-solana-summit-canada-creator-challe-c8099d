@@ -1,0 +1,8 @@
+SovereignStream (CreatorCore v2) Test Matrix
+    ✔ 1. Initializes the Creator State and Split Configuration (60/40 Split) (412ms)
+    ✔ 2. Patron Alice buys shares on the bonding curve (285ms)
+    ✔ 3. Autonomous Keeper triggers Route Split to Collaborators (198ms)
+    ✔ 4. Prevents unauthorized claim on linear vesting stream (78ms)
+    ✔ 5. Allows creator to claim vested streaming liquidity (2095ms)
+
+  5 passing (3.1s)

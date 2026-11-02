@@ -1,0 +1,19 @@
+SECURITY AUDIT VECTOR MATRIX
++------------------------+----------------------------------------------------------------------+
+| Threat Vector          | Program Countermeasure Implemented                                   |
++------------------------+----------------------------------------------------------------------+
+| Reentrancy             | CEI (Checks-Effects-Interactions) Pattern: internal balance          |
+|                        | & status mutations precede lamport adjustments.                      |
++------------------------+----------------------------------------------------------------------+
+| Arithmetic Overflow    | Strict `.checked_add()`, `.checked_mul()`, and safe integer casts.  |
+|                        | Program aborts on overflow via `SovereignError::MathOverflow`.       |
++------------------------+----------------------------------------------------------------------+
+| Fake Account Injection | Anchor PDA derivation check `seeds = [...]` with verified canonical  |
+|                        | bumps; explicit `has_one = creator_hub` relations.                   |
++------------------------+----------------------------------------------------------------------+
+| Unbound Dynamic Loops  | Maximum split array size capped at `MAX_SPLIT_RECIPIENTS = 5`.       |
+|                        | Eliminates CPU denial-of-service / gas-exhaustion exploits.          |
++------------------------+----------------------------------------------------------------------+
+| Royalty Bypass         | SPL Token-2022 Transfer Hook forces invocation on every transfer;    |
+|                        | cannot be stripped by off-chain wrappers or non-compliant DEXs.     |
++------------------------+----------------------------------------------------------------------+

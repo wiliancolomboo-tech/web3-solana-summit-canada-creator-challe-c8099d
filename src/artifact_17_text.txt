@@ -1,0 +1,8 @@
+stream_mesh
+    ✔ 1. Initializes Creator Channel with 80/20 Splits (212ms)
+    ✔ 2. Executes Instant Tip with Exact Basis Point Splits (480ms)
+    ✔ 3. Opens a Continuous Micropayment Stream (408ms)
+    ✔ 4. Cranks settlement midway through stream (2550ms)
+    ✔ 5. Settles remaining duration and closes stream with rent recovery (3560ms)
+
+  5 passing (7.21s)

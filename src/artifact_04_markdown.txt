@@ -1,0 +1,6 @@
+[x] 1. Reentrancy Immunity: Solana runtime's non-reentrant single-borrow semantics prevent classic EVM reentrancies. State mutations occur strictly before external CPI transfers.
+[x] 2. Mathematical Integrity: All arithmetic calculations utilize `.checked_add()`, `.checked_sub()`, `.checked_mul()`, and `.checked_div()`, returning `CreatorError::MathOverflow` on invalid bounds.
+[x] 3. Zero-Lamport Loss (Dust Allocation): Truncated basis point remainders (`dust`) are calculated and explicitly routed to the creator, preserving full conservation of value.
+[x] 4. PDA Collision & Bump Enforcement: Canonical bump addresses are checked and stored directly in the `CreatorProfile` and `SubscriptionEscrow` PDAs upon initialization.
+[x] 5. Collaborator Key Alignment: Instructions check `require_keys_eq!` between the stored profile recipients and supplied `remaining_accounts` before transferring any lamports.
+[x] 6. Lamport Drain Guard: The Vault PDA only disburses lamports under programmatic seeds derived with `creator_profile.creator` and validated bumps.

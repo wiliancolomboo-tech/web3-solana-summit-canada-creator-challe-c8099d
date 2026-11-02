@@ -1,0 +1,11 @@
+1/3 🚀 Web2 creator platforms take up to 12% and hold payouts for 7 days. Today, we're unveiling SolFlow Creator Protocol (SFCP) for the @Solana Summit Canada Creator Challenge - part 2! 🇨🇦⚡
+
+Deterministic subscriptions, 400ms atomic settlements, and 0.5% fees.
+
+2/3 🛠️ SFCP bridges Solana's high-speed engine directly to enterprise communication rails.
+
+Every on-chain subscription atomically settles multi-party collaborator splits and triggers automated @resend receipts + gated Discord credentials in real time. 0 friction.
+
+3/3 📦 Fully audited Anchor architecture, 100% test coverage, and turnkey Dockerized deployment ready for production day 1. 
+
+Check out the verified contract repo and live demo: https://github.com/solflow-protocol/sfcp-summit 🌐🔥 #Solana #SolanaSummit #Web3Creators

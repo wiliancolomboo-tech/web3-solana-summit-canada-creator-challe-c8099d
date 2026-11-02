@@ -1,0 +1,6 @@
+SOLANA_RPC_URL=https://api.devnet.solana.com
+PROGRAM_ID=Cre82YkQ7YcZtE3Kk25qWd6u8v4ZJ9s1A7rVpX4x7Z9B
+RESEND_API_KEY=re_enterprise_live_key_here
+NOTIFY_EMAIL_RECIPIENT=creator-ops@streamteam.xyz
+DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder

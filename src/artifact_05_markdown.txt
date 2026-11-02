@@ -1,0 +1,30 @@
+### [00:00 - 00:20] THE HOOK & THE CRISIS
+[Visual: Screen displays split view: Patreon dashboard showing "Pending Payout: 30 Days" next to a Web3 tip bot consuming 120,000 CUs.]
+Speaker (Narrative):
+"Judges, the modern creator economy is broken. Web2 platforms extract up to 30% of creator revenue and withhold settlement for 30 days. Meanwhile, current Web3 subscription models force fans into costly NFT mints or spam the ledger with repetitive monthly transactions.
+Meet HyperVault: Solana's continuous micro-patronage protocol. Zero intermediary fees, zero lockup, and real-time per-second settlement at under 16,000 Compute Units."
+
+### [00:20 - 00:50] ARCHITECTURE & PROTOCOL MECHANICS
+[Visual: Screen captures terminal launching Anchor localnet, followed by the Mermaid architecture flow showing Escrow PDAs and Linear Decay Math.]
+Speaker (Narrative):
+"HyperVault replaces recurring billing with continuous liquidity streams. A fan deposits lamports into an isolated deterministic Escrow PDA. Every single Solana slot, yield is mathematically settled using checked linear decay formulas.
+Look at the contract: our settle instruction avoids CPI invocation overhead by performing verified in-place lamport mutations. This cuts execution cost to 12,410 CUs, enabling permissionless crank bots to batch hundreds of creator distributions in a single atomic transaction."
+
+### [00:50 - 01:25] LIVE CODE DEMO & THE TEST MATRIX
+[Visual: Fast-paced run of `anchor test`. 7 green checkmarks pass across edge cases: split math, spoofing defense, and instant refund cancellation.]
+Speaker (Narrative):
+"Let's see it live. We run our comprehensive 7-point QA integration test suite.
+Watch QA-01 initialize the Creator Vault with an 80/20 revenue split to a collaborator. In QA-03, Alice opens a stream. In QA-05, an unprivileged crank triggers settlement: exactly 80% routes to the creator, 20% to the collaborator, down to the exact lamport.
+In QA-06, a malicious actor attempts to spoof the creator's payout address—it fails instantly with our strict Anchor account constraint.
+Finally, in QA-07, Alice cancels: unstreamed funds are returned to her wallet instantly, and the stream PDA closes, reclaiming 100% of the account rent."
+
+### [01:25 - 02:00] WHY HYPERVAULT WINS FIRST PLACE
+[Visual: Architecture roadmap: Token-2022 Transfer Fees, Dialect Actions/Blinks integration mock, and Summit Canada Creator Hub UI.]
+Speaker (Narrative):
+"HyperVault is not a prototype; it is an industrial-grade primitive for the Solana Creator Challenge.
+It solves real creator problems:
+1. Instant streaming liquidity.
+2. Programmatic collaborator co-splits.
+3. Production-level security with zero-unwrap, overflow-checked Rust.
+4. Ready for Solana Actions and Blinks, allowing fans to start a stream directly from X or Discord.
+We are bringing Web3 creator monetization to its final, frictionless form. Thank you."

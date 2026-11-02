@@ -1,0 +1,5 @@
+3/4 🚀 100% production-ready, fully covered with unit/integration tests, and 1-click Docker deployable.
+
+Let's empower the next generation of digital artists and media syndicates with real-time settlement rails. 
+
+Check out the code & runbook: https://github.com/solflow-protocol/core

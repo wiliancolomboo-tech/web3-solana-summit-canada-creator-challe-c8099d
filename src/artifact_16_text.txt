@@ -1,0 +1,9 @@
+solcreator-core QA Verification Suite
+    ✔ 1. Initializes creator channel with deterministic 3-way split (70%, 20%, 10%) (421ms)
+    ✔ 2. Fails to initialize if Basis Points do not sum to 10,000 bps (189ms)
+    ✔ 3. Attests creator publication with SHA256 content fingerprint (240ms)
+    ✔ 4. Accepts SOL tip and updates tracking ledger (392ms)
+    ✔ 5. Permissionless Keeper executes distribution split flawlessly (455ms)
+    ✔ 6. Rejects malicious keeper attempt with swapped recipient accounts (212ms)
+
+  6 passing (2s)

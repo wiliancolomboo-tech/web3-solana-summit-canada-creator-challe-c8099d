@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  aurora-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aurora-settlement-daemon
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - SOLANA_WSS_URL=wss://api.devnet.solana.com
+      - PROGRAM_ID=AuRoRA1111111111111111111111111111111111111
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALERT_FALLBACK_EMAIL=${ALERT_FALLBACK_EMAIL}
+      - LOG_LEVEL=info
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

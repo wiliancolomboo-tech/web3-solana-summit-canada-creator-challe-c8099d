@@ -1,0 +1,14 @@
+# Solana Network RPC Endpoint
+SOLANA_RPC_URL=https://api.devnet.solana.com
+
+# StreamForge Deployed Program ID
+STREAMFORGE_PROGRAM_ID=ForgeM8z2Z1V3dG8hQWw9KxLkNxzFfU7Xv4wV2pZ9xR
+
+# Enterprise Transactional Email (Resend API)
+RESEND_API_KEY=re_123456789abcdef
+
+# Community Alerts Webhook
+DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+
+# Server Telemetry Port
+PORT=8080

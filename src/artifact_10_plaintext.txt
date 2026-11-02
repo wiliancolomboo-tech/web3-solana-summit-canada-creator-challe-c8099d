@@ -1,0 +1,9 @@
+CreatorStream Vault Integration Tests
+    ✔ 1. Initializes Creator Vault with 60/40 Split Configuration (412ms)
+    ✔ 2. Fails to initialize if Splits do not equal 10,000 bps (188ms)
+    ✔ 3. Fan subscribes and locks 0.5 SOL into Escrow (394ms)
+    ✔ 4. Settles accrued stream after time delay (3052ms)
+    ✔ 5. Atomically distributes splits to Collaborator 1 (60%) and Collaborator 2 (40%) (421ms)
+    ✔ 6. Cancels subscription: refunds unspent funds to Fan and closes stream (389ms)
+
+  6 passing (4.86s)

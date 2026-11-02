@@ -1,0 +1,8 @@
+AURORA_PROGRAM_ID=AuroRA1111111111111111111111111111111111111
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_WS_URL=wss://api.devnet.solana.com
+RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuvwxyz
+RECIPIENT_EMAIL=admin@creatorguild.ca
+DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+HEALTH_PORT=8080
