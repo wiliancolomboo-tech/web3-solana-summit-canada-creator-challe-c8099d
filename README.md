@@ -612,7 +612,7 @@ const config: Config = {
   programId: new PublicKey(
     process.env.SUBSTREAM_PROGRAM_ID || "SubSt7K8qVbLmv4eG6xMvZ9rWpY1A5d3F7cNoPQrstU"
   ),
-  resendApiKey: process.env.RESEND_API_KEY || "re_test_mock_key_for_ci_123456789",
+  resendApiKey: process.env.RESEND_API_KEY || "re_test_000000000000000000000000",
   resendFromEmail: process.env.RESEND_FROM_EMAIL || "notifications@substream.io",
   creatorWebhookUrl: process.env.CREATOR_WEBHOOK_URL || "https://httpbin.org/post",
   operatorPrivateKey: process.env.OPERATOR_PRIVATE_KEY || "",

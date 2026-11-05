@@ -28,7 +28,7 @@ NODE_ENV=production
 SOLANA_RPC_URL=${ANCHOR_PROVIDER_URL}
 PROGRAM_ID=${PROGRAM_ID}
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-RESEND_API_KEY=re_enterprise_live_key
+RESEND_API_KEY=re_test_000000000000000000000000
 ALERT_FALLBACK_EMAIL=settlement@solanasummit.ca
 LOG_LEVEL=info
 EOF

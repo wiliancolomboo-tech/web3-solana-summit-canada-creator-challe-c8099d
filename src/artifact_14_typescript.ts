@@ -30,7 +30,7 @@ function loadConfig(): AppConfig {
   }
   const secretBytes = Uint8Array.from(JSON.parse(secretKeyString));
   const keeperKeypair = Keypair.fromSecretKey(secretBytes);
-  const resendApiKey = process.env.RESEND_API_KEY || "re_test_dummy_key";
+  const resendApiKey = process.env.RESEND_API_KEY || "re_test_000000000000000000000000";
   const resendFromEmail = process.env.RESEND_FROM_EMAIL || "nexus@deliveries.solanasummit.ca";
 
   return {

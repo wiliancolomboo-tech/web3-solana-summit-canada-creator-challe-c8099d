@@ -4,8 +4,8 @@ SOLANA_WS_URL="wss://api.devnet.solana.com"
 PROGRAM_ID="PuLSE11111111111111111111111111111111111111"
 
 # Enterprise Notification APIs
-RESEND_API_KEY="re_1234567890abcdef"
+RESEND_API_KEY="re_test_000000000000000000000000"
 DISCORD_WEBHOOK_URL="https://api.example.com/webhooks/alerts/placeholder"
 
 # Security & Verification
-AGENT_SECRET="replace_with_a_secure_hmac_secret_string"
+AGENT_SECRET="replace_with_a_secure_test_000000000000000000000000"

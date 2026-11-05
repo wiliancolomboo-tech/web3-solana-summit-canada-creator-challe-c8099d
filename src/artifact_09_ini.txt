@@ -1,7 +1,7 @@
 SOLANA_RPC_HTTP=https://api.devnet.solana.com
 SOLANA_RPC_WS=wss://api.devnet.solana.com
 PROGRAM_ID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
-RESEND_API_KEY=re_123456789_enterprise_key
+RESEND_API_KEY=re_test_000000000000000000000000
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 SENDER_EMAIL=creator-passes@solflow.xyz
 PORT=8080

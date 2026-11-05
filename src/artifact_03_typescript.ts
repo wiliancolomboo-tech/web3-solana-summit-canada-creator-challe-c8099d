@@ -12,7 +12,7 @@ const SOLANA_WSS_URL = process.env.SOLANA_WSS_URL || "wss://api.devnet.solana.co
 const PROGRAM_ID = new PublicKey(
   process.env.PROGRAM_ID || "PatrnXb7R97eZ9wQG3HwYkmhGZkGZJmQc7LpWn2VNmS"
 );
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_mock_123456789";
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_000000000000000000000000";
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
 
 const resend = new Resend(RESEND_API_KEY);

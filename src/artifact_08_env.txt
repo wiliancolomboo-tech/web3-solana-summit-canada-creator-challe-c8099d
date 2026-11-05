@@ -2,6 +2,6 @@ PORT=8080
 SOLANA_RPC_HTTP=https://api.devnet.solana.com
 SOLANA_RPC_WS=wss://api.devnet.solana.com
 SOLCAST_PROGRAM_ID=Cast111111111111111111111111111111111111111
-RESEND_API_KEY=re_YOUR_PRODUCTION_RESEND_KEY
+RESEND_API_KEY=re_test_000000000000000000000000
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 STREAM_SIGNING_SECRET=generate_a_random_32_byte_hex_secret
